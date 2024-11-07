@@ -246,7 +246,6 @@ class InventoryListByDateView(APIView):
     
     def get_queryset(self, cutoff_date:datetime):
         return self.queryset.filter(created_at__gt=cutoff_date)
-        # return self.queryset.all()
     
 
 
