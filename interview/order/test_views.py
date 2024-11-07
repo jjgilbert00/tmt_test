@@ -5,7 +5,8 @@ from interview.order.models import Order
 from django.utils import timezone
 from interview.inventory.models import Inventory, InventoryType, InventoryLanguage
 
-class DeactivateOrderViewTest(APITestCase):
+
+class EmbargoedOrderViewTest(APITestCase):
     def setUp(self):
         inventory_type = InventoryType.objects.create(name='Test Type')
         inventory_language = InventoryLanguage.objects.create(name='Test Language')
@@ -15,23 +16,39 @@ class DeactivateOrderViewTest(APITestCase):
             language=inventory_language,
             metadata={}
         )
-        self.order = Order.objects.create(
-            inventory=inventory,
-            start_date=timezone.now().date(),
-            embargo_date=timezone.now().date() + timezone.timedelta(days=1)
-        )
+        self.nowdate = timezone.now().date() + timezone.timedelta(days=2)
+        self.orders = [
+            Order.objects.create(
+                inventory=inventory,
+                start_date=timezone.now().date(),
+                embargo_date=timezone.now().date() + timezone.timedelta(days=1)
+            ),
+            Order.objects.create(
+                inventory=inventory,
+                start_date=timezone.now().date(),
+                embargo_date=timezone.now().date() + timezone.timedelta(days=3)
+            ),
+            Order.objects.create(
+                inventory=inventory,
+                start_date=timezone.now().date(),
+                embargo_date=timezone.now().date() + timezone.timedelta(days=5)
+            ),
+        ]
 
-    def test_deactivate_order_success(self):
-        url = reverse('deactivate-order', kwargs={'pk': self.order.pk})
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.order.refresh_from_db()
-        self.assertFalse(self.order.is_active)
+    def test_embargoed_orders_with_valid_date(self):
+        url = reverse('embargoed-order')
+        response = self.client.get(url, {'date': self.nowdate})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
 
-    def test_deactivate_order_not_found(self):
-        url = reverse('deactivate-order', kwargs={'pk': 999})
-        response = self.client.post(url)
-        self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+    def test_embargoed_orders_with_no_date(self):
+        url = reverse('embargoed-order')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error'], 'date is required.')
 
-
-
+    def test_embargoed_orders_with_invalid_date(self):
+        url = reverse('embargoed-order')
+        response = self.client.get(url, {'date': 'invalid-date'})
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn('error', response.data)
