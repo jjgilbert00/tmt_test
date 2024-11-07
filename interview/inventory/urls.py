@@ -12,6 +12,6 @@ urlpatterns = [
     path('languages/', InventoryLanguageListCreateView.as_view(), name='inventory-languages-list'),
     path('tags/', InventoryTagListCreateView.as_view(), name='inventory-tags-list'),
     path('types/', InventoryTypeListCreateView.as_view(), name='inventory-types-list'),
-    path('latest/<str:date>/', InventoryListByDateView.as_view(), name='inventory-list-by-date'),
+    path('recent/<str:date>/', InventoryListByDateView.as_view(), name='inventory-list-by-date'),
     path('', InventoryListCreateView.as_view(), name='inventory-list'),
 ]
