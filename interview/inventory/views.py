@@ -1,6 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
+from datetime import datetime
+from django.utils.dateparse import parse_date
 
 from interview.inventory.models import Inventory, InventoryLanguage, InventoryTag, InventoryType
 from interview.inventory.schemas import InventoryMetaData
@@ -219,3 +221,31 @@ class InventoryTypeRetrieveUpdateDestroyView(APIView):
     
     def get_queryset(self, **kwargs):
         return self.queryset.get(**kwargs)
+
+
+class InventoryListByDateView(APIView):
+    queryset = Inventory.objects.all()
+    serializer_class = InventorySerializer
+
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        date_str = kwargs.get('date')
+        if not date_str:
+            return Response({'error': 'Date parameter is required'}, status=400)
+        
+        try:
+            date = parse_date(date_str)
+            if not date:
+                raise ValueError
+        except ValueError:
+            return Response({'error': 'Invalid date format'}, status=400)
+        
+        queryset = self.get_queryset(date)
+        serializer = self.serializer_class(queryset, many=True)
+
+        return Response(serializer.data, status=200)
+    
+    def get_queryset(self, cutoff_date:datetime):
+        return self.queryset.filter(created_at__gt=cutoff_date)
+    
+
+
