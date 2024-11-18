@@ -8,6 +8,14 @@ from interview.order.serializers import OrderSerializer, OrderTagSerializer
 class OrderListCreateView(generics.ListCreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if 'tag_name' in self.kwargs:
+            queryset = queryset.filter(tags__name__iexact=self.kwargs['tag_name'])
+        elif 'tag_id' in self.kwargs:
+            queryset = queryset.filter(tags__id=self.kwargs['tag_id'])
+        return queryset
     
 
 class OrderTagListCreateView(generics.ListCreateAPIView):
