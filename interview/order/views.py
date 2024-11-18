@@ -15,6 +15,7 @@ class OrderTagListCreateView(generics.ListCreateAPIView):
     serializer_class = OrderTagSerializer
 
     def get_queryset(self):
-        if 'order_id' in self.request.query_params:
-            return super().get_queryset().filter(orders=self.request.query_params['order_id'])
-        return super().get_queryset()
+        queryset = super().get_queryset()
+        if 'order_id' in self.kwargs:
+            queryset = queryset.filter(orders=self.kwargs['order_id'])
+        return queryset

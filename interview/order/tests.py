@@ -27,22 +27,24 @@ class TagListTests(APITestCase):
         """
         Query for tags associated with a given order.
         """
-        url = reverse('order-detail')
-        response = self.client.get(url, QUERY_STRING=f"order_id={self.foobar.id}")
+        url = reverse('order-tags',  kwargs={'order_id': self.foobar.id})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         results = response.json()
         self.assertEqual(len(results), 2)
         self.assertEqual(results[0]['name'], 'Foo')
         self.assertEqual(results[1]['name'], 'Bar')
         
-        response = self.client.get(url, QUERY_STRING=f"order_id={self.foobaz.id}")
+        url = reverse('order-tags',  kwargs={'order_id': self.foobaz.id})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         results = response.json()
         self.assertEqual(len(results), 2)
         self.assertEqual(results[0]['name'], 'Foo')
         self.assertEqual(results[1]['name'], 'Baz')
         
-        response = self.client.get(url, QUERY_STRING=f"order_id={self.foobarbaz.id}")
+        url = reverse('order-tags',  kwargs={'order_id': self.foobarbaz.id})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         results = response.json()
         self.assertEqual(len(results), 3)
@@ -54,8 +56,8 @@ class TagListTests(APITestCase):
         """
         Query for tags with a nonexistent order id.
         """
-        url = reverse('order-detail')
-        response = self.client.get(url, QUERY_STRING=f"order_id=-1")
+        url = reverse('order-tags', kwargs={'order_id': 9999})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         results = response.json()
         self.assertEqual(len(results), 0)
